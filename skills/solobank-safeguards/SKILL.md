@@ -1,45 +1,88 @@
 ---
 name: solobank-safeguards
 description: >-
-  Manage spending limits and emergency lock for the Solobank wallet. Use when
-  asked to set spending limit, lock the agent, unlock the wallet, check config,
-  set daily limit, or manage transaction safeguards.
+  Manage Solobank wallet spending limits and the emergency lock. Use when the
+  user asks to "set a spending limit", "lock the agent", "freeze the wallet",
+  "unlock", "see current limits", "raise daily limit", or any other guardrail
+  configuration. Lock can be triggered from MCP but only unlocked from the
+  CLI for safety.
 license: MIT
 metadata:
   author: solobank
-  version: "1.0"
-  requires: Solobank CLI (npx @solobank/cli init)
+  version: "4.0.2"
+  requires: Solobank CLI 4.0.x (npx -y @solobank/cli@latest init)
+  tags: [solana, wallet, safeguards, limits, lock, safety, solobank]
 ---
 
-# Solobank: Safeguards
+# Solobank: Safeguards (Limits + Lock)
 
 ## Purpose
-Configure per-transaction limits, daily send limits, and emergency
-lock/unlock to protect the wallet from excessive spending.
+Solobank ships hard guardrails on top of the raw signing key:
+
+1. **`maxAmountPerTx`** — maximum USD value for a single send/swap/lend.
+2. **`maxDailySend`** — maximum USD value spent in a rolling 24 h window.
+3. **Emergency lock** — freezes every write operation until manually
+   unlocked from the CLI.
+
+The agent cannot disable safeguards on its own — only the CLI user can.
 
 ## Commands
 ```bash
-solobank config get                          # view all safeguards
-solobank config get maxAmountPerTx           # view specific setting
-solobank config set maxAmountPerTx 5         # max $5 per transaction
-solobank config set maxDailySend 100         # max $100 per rolling 24h
-solobank lock                                # emergency freeze all writes
-solobank unlock                              # re-enable transactions
+solobank config get                       # show every safeguard value
+solobank config get maxAmountPerTx        # show one specific key
+solobank config set maxAmountPerTx <usd>  # update per-tx limit
+solobank config set maxDailySend <usd>    # update daily limit
+solobank lock                             # emergency freeze (no writes)
+solobank unlock                           # re-enable writes (CLI only!)
 ```
 
-## Output (config get)
+`set` only accepts `maxAmountPerTx` and `maxDailySend`. Anything else is
+rejected.
+
+## Examples
+```bash
+# Cap any single tx at $5
+solobank config set maxAmountPerTx 5
+
+# Cap rolling-24h spend at $100
+solobank config set maxDailySend 100
+
+# Inspect current values
+solobank config get
+# {
+#   "maxAmountPerTx": 5,
+#   "maxDailySend": 100,
+#   "locked": false
+# }
+
+# Panic — freeze everything
+solobank lock
+
+# Resume
+solobank unlock
 ```
-{
-  "maxAmountPerTx": 5,
-  "maxDailySend": 100,
-  "locked": false
-}
-```
+
+## How safeguards interact with other commands
+- `send`, `swap`, `lend`, `borrow`, `pay`, `withdraw`, `repay`,
+  `rebalance` all check `maxAmountPerTx` **and** that the cumulative
+  rolling-24h spend stays under `maxDailySend`. Any failure aborts
+  before broadcasting.
+- Read-only commands (`address`, `balance`, `lend-rates`, `swap-quote`)
+  ignore safeguards entirely.
+- A locked wallet refuses every write but reads still work.
+
+## Lock vs unlock asymmetry
+- `solobank lock` — works from the CLI **and** from MCP via the
+  `solobank_lock` tool. The agent itself can panic-stop on demand.
+- `solobank unlock` — **CLI only**. The MCP server intentionally has no
+  unlock tool, so a compromised agent cannot reverse its own lockdown.
+  A human has to type `solobank unlock` in a terminal.
 
 ## Notes
-- Lock can be activated via MCP (`solobank_lock` tool) but can ONLY be
-  unlocked via CLI (`solobank unlock`) for security
-- Safeguard config is stored at `~/.solobank/config.json`
-- Default per-tx limit is 1.0 (conservative)
-- Daily limit uses a rolling 24-hour window
-- Read-only operations (balance, rates, quotes) work even when locked
+- Safeguard config lives at `~/.config/solobank/safeguards.json`
+  (path may differ on Windows / WSL — check `solobank config get` if
+  you're unsure).
+- Default per-tx limit is conservative (`1.0` USD). Bump it explicitly
+  before any larger operation.
+- When proposing a `set` to raise a limit, always confirm with the user
+  first — that's the whole point of the guardrail.
