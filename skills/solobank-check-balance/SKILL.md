@@ -1,38 +1,56 @@
 ---
 name: solobank-check-balance
 description: >-
-  Check the Solobank agent wallet balance on Solana. Use when asked about wallet
-  balance, how much SOL or USDC is available, lending positions, or total funds.
-  Also use before any send, swap, or lend operation to confirm sufficient funds.
+  Check the Solobank agent wallet balance on Solana — SOL and USDC. Use when
+  the user asks about wallet balance, "how much SOL / USDC do I have", how
+  much is available to spend, or when the agent needs to confirm sufficient
+  funds before any send / swap / lend / pay operation. Read-only, never
+  triggers a transaction.
 license: MIT
 metadata:
   author: solobank
-  version: "1.0"
-  requires: Solobank CLI (npx @solobank/cli init)
+  version: "4.0.2"
+  requires: Solobank CLI 4.0.x (npx -y @solobank/cli@latest init)
+  tags: [solana, wallet, balance, read-only, solobank]
 ---
 
 # Solobank: Check Balance
 
 ## Purpose
-Fetch the current balance of the agent's Solana wallet: SOL, USDC,
-and other SPL token holdings.
+Fetch the current balance of the agent's Solobank wallet on Solana
+devnet — SOL plus USDC. Always run this **before** any spend so the
+agent knows the budget.
 
 ## Commands
 ```bash
-solobank balance            # human-readable summary
-solobank balance --json     # machine-parseable JSON
+solobank address    # print just the wallet's base58 public key
+solobank balance    # human-readable SOL + USDC summary
 ```
 
-## Output (default)
+## Output (real CLI 4.0.2)
 ```
-SOL:   1.250000000 ($150.00)
-USDC:  500.000000
-───────────────────────
-Total: ~$650.00
+$ solobank address
+BYw72eRN6C8vQdbopEYzvnPRsyFfep67xcSwGZ1BXsML
+
+$ solobank balance
+Address: BYw7...XsML
+SOL: 0.0000 SOL
+USDC: $0.00
 ```
 
 ## Notes
-- SOL balance includes rent-exempt reserve (~0.00089 SOL)
-- USDC uses 6 decimals, SOL uses 9 decimals
-- If balance shows 0, fund the wallet via transfer or airdrop (devnet: `solana airdrop`)
-- Use `solobank address` to get the wallet address for funding
+- Default network is **Solana devnet**. Override via the
+  `SOLOBANK_RPC_URL` environment variable for mainnet or another cluster.
+- USDC is shown in dollars at face value (1 USDC = $1). SOL is shown in
+  raw token units, not USD — convert with the current SOL price if you
+  need a dollar figure.
+- If both balances are zero, the agent must be funded before doing
+  anything else:
+  - Devnet: <https://faucet.solana.com> or `solana airdrop 2`
+  - Mainnet: transfer from another wallet
+- Read-only — works even when the wallet is `solobank lock`-ed.
+
+## When NOT to use
+- Don't use to check balances of *other* wallets — Solobank only knows
+  about the local agent wallet at `~/.config/solobank/id.json`. Use a
+  block explorer or RPC for arbitrary addresses.
