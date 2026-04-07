@@ -1,64 +1,125 @@
 # Solobank Agent Skills
 
-Agent Skills for the Solobank AI bank account on Solana. Install once and your AI agent gains the ability to check balances, send payments, earn yield, borrow, swap tokens, and pay for MPP API services.
+[Agent Skills](https://github.com/anthropics/skills) for the
+[Solobank](https://www.solobank.lol) AI bank account on Solana. Install
+once and your AI agent gains the ability to check balances, send
+payments, earn yield via Kamino / Marginfi, borrow against deposits,
+swap tokens via Jupiter, and pay for any of the **46 + services** behind
+the Solobank MPP gateway.
 
-## Install
-
-```bash
-npx skills add decentrathon/solobank-skills
-```
-
-Works with Claude Code, Cursor, VS Code, GitHub Copilot, and any platform supporting the [Agent Skills](https://github.com/anthropics/agent-skills) standard.
-
-### Manual install
-
-**Cursor / VS Code:**
-```bash
-git clone https://github.com/decentrathon/solobank-skills.git .cursor/skills/solobank-skills
-```
-
-**Claude Code / Devin:**
-```bash
-git clone https://github.com/decentrathon/solobank-skills.git
-```
+The skills are written in the open `SKILL.md` format, so they work with
+any agent runtime that adopts it: **Claude Code, Claude Desktop,
+[OpenClaw](https://docs.openclaw.ai), Cursor, VS Code, Devin, Codex CLI,
+Gemini CLI**, and friends.
 
 ## Prerequisites
 
+Solobank ships as an `npx`-able CLI plus an MCP server — no global
+install or sudo required:
+
 ```bash
-npx @solobank/cli init
+npx -y @solobank/cli@latest init
 ```
 
-## Available Skills
+The wallet is created at `~/.config/solobank/id.json`. Default network
+is **Solana devnet** in 4.0.x. Override with `SOLOBANK_RPC_URL` if you
+need another cluster.
 
-| Skill | Triggers |
-|-------|----------|
-| `solobank-check-balance` | "check balance", "how much SOL do I have" |
-| `solobank-send` | "send 10 USDC to...", "transfer SOL" |
-| `solobank-save` | "earn yield", "deposit to savings", "lend USDC" |
-| `solobank-withdraw` | "withdraw from savings", "access my deposits" |
-| `solobank-borrow` | "borrow 40 USDC", "take out a loan" |
-| `solobank-repay` | "repay my loan", "pay back debt" |
-| `solobank-pay` | "call that paid API", "pay for MPP service" |
-| `solobank-swap` | "swap SOL to USDC", "exchange tokens" |
-| `solobank-rebalance` | "optimize yield", "move to better APY" |
-| `solobank-safeguards` | "set spending limit", "lock agent" |
-| `solobank-mcp` | "install MCP server", "connect to Claude" |
+If you'd like a permanent `solobank` command on `PATH`:
 
-## About Solobank
+```bash
+npm install -g @solobank/cli
+```
 
-Solobank provides DeFi banking infrastructure for AI agents on Solana:
+## Install the skills
 
-- **Checking** — send and receive SOL/USDC
-- **Savings** — earn yield via Kamino and Marginfi
-- **Credit** — borrow against deposits
-- **Swap** — exchange tokens via Jupiter (20+ DEXs)
-- **Payments** — pay for 40+ APIs via MPP gateway
+### Claude Code (project-scoped)
+
+```bash
+git clone https://github.com/solobank-ai/solobank-skills.git \
+  .claude/skills/solobank-skills
+```
+
+### Claude Code (user-scoped, available in every project)
+
+```bash
+git clone https://github.com/solobank-ai/solobank-skills.git \
+  ~/.claude/skills/solobank-skills
+```
+
+### OpenClaw
+
+```bash
+git clone https://github.com/solobank-ai/solobank-skills.git \
+  ~/.openclaw/workspace/skills/solobank-skills
+```
+
+OpenClaw scans `~/.openclaw/workspace/skills/` on launch and surfaces
+each `SKILL.md` automatically. After cloning, restart OpenClaw (or run
+`openclaw skills reload` if your build supports it).
+
+### Cursor / VS Code
+
+```bash
+git clone https://github.com/solobank-ai/solobank-skills.git \
+  .cursor/skills/solobank-skills
+```
+
+### Anything else
+
+The repo is just a folder of `SKILL.md` files — point any compliant
+runtime at it.
+
+## Skills
+
+| Skill | Trigger phrases (examples) |
+|---|---|
+| [`solobank-init`](skills/solobank-init/SKILL.md) | "set up Solobank", "create a wallet", "initialise the agent" |
+| [`solobank-check-balance`](skills/solobank-check-balance/SKILL.md) | "check balance", "how much SOL / USDC do I have", "show wallet" |
+| [`solobank-send`](skills/solobank-send/SKILL.md) | "send 10 USDC to ...", "transfer SOL to that address" |
+| [`solobank-save`](skills/solobank-save/SKILL.md) | "earn yield", "deposit to savings", "lend my USDC" |
+| [`solobank-withdraw`](skills/solobank-withdraw/SKILL.md) | "withdraw from savings", "pull funds out of Kamino" |
+| [`solobank-borrow`](skills/solobank-borrow/SKILL.md) | "borrow 40 USDC", "take out a loan against my deposits" |
+| [`solobank-repay`](skills/solobank-repay/SKILL.md) | "repay the loan", "pay back the borrow", "clear the debt" |
+| [`solobank-rebalance`](skills/solobank-rebalance/SKILL.md) | "optimise yield", "move to higher APY", "rebalance" |
+| [`solobank-swap`](skills/solobank-swap/SKILL.md) | "swap SOL to USDC", "convert tokens", "exchange via Jupiter" |
+| [`solobank-pay`](skills/solobank-pay/SKILL.md) | "call that paid API", "use the gated endpoint", "pay for the LLM call" |
+| [`solobank-safeguards`](skills/solobank-safeguards/SKILL.md) | "set spending limit", "lock the agent", "raise the daily limit" |
+| [`solobank-mcp`](skills/solobank-mcp/SKILL.md) | "install MCP", "wire OpenClaw / Claude Desktop / Cursor to my wallet" |
+
+Each skill is a single `SKILL.md` file with a frontmatter description
+the agent runtime uses for selection, plus a body that documents
+commands, examples, and pre-flight checks.
+
+## Solobank in one screen
+
+| Surface | What it gives you |
+|---|---|
+| **Checking** | Send and receive SOL / USDC on Solana |
+| **Savings** | Earn yield via Kamino + Marginfi (auto-routes to highest APY) |
+| **Credit** | Borrow against your supplied collateral |
+| **Swap** | Trade tokens via Jupiter (20 + Solana DEXs aggregated) |
+| **MPP gateway** | Pay-per-call access to 46 + APIs (OpenAI, Anthropic, Brave, Exa, CoinGecko, ElevenLabs, fal.ai, ...) — handles HTTP 402 automatically |
 
 **Resources:**
-- SDK: `npm install @solobank/sdk`
-- CLI: `npx @solobank/cli init`
-- MCP: `solobank mcp install`
-- GitHub: [github.com/decentrathon](https://github.com/decentrathon)
+
+| | |
+|---|---|
+| Web        | <https://www.solobank.lol> |
+| Docs       | <https://www.solobank.lol/docs> |
+| Services   | <https://www.solobank.lol/services> |
+| MPP gateway| <https://mpp.solobank.lol> |
+| GitHub     | <https://github.com/solobank-ai> |
+| SDK        | `npm install @solobank/sdk` |
+| CLI        | `npx -y @solobank/cli@latest init` |
+| MCP        | `npx -y @solobank/mcp@latest` |
+
+## Versioning
+
+These skills target **Solobank CLI 4.0.x**. Each `SKILL.md` declares
+the exact version it was written against in its frontmatter
+`metadata.version` field. If a CLI command's options drift, please open
+an issue or PR on this repo.
 
 ## License
 
